@@ -1,5 +1,6 @@
-from fastapi import FastAPI
-from src.schemas.FeatureVectorChurn import FeatureVectorChurn
+from fastapi import FastAPI, Query
+from src.schemas.feature_vector_churn import FeatureVectorChurn
+from src.services.dataset.dataset_service import dataset_service
 
 app = FastAPI()
 
@@ -11,3 +12,13 @@ def read_root() -> dict[str, str]:
 @app.post("/predict")
 def predict(payload: FeatureVectorChurn) -> FeatureVectorChurn:
     return payload
+
+@app.get("/preview")
+async def preview_dataset(
+    limit: int = Query(default=5, ge=1, le=100)
+):
+    return dataset_service.preview(limit)
+
+@app.get("/info")
+async def dataset_info():
+    return dataset_service.info()
