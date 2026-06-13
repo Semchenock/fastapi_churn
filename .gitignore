@@ -27,3 +27,6 @@ ENV/
 
 # Dataset
 data/
+
+# Trained model artifacts
+models/

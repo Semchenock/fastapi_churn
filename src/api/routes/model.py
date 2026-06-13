@@ -14,3 +14,8 @@ def predict(payload: FeatureVectorChurn):
 @router.post("/model/train")
 async def train_model():
     return model_service.train()
+
+
+@router.get("/model/status")
+async def model_status():
+    return model_service.status()
