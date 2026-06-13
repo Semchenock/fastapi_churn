@@ -53,7 +53,7 @@ class DatasetService:
 
         df = self.loader.get_dataframe()
         self.ensure_not_empty(df)
-        self._train_test = self.preprocessor.preprocess(df)
+        self._train_test = self.preprocessor.prepare_train_test_split(df)
         return self._train_test
 
     def get_train(self):

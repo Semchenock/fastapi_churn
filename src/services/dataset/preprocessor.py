@@ -5,29 +5,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 
-from src.schemas.dataset_row_churn import DatasetRowChurn
 from src.services.dataset.exceptions import DatasetError
-
-MEAN_COLUMNS = [
-    "monthly_fee",
-    "usage_hours"
-]
-
-MEAN_COLUMNS_INT = [
-    "support_requests",
-    "account_age_months",
-    "failed_payments",
-]
-
-MODE_COLUMNS = [
-    "region",
-    "device_type",
-    "payment_method"
-]
-
-BINARY_COLUMNS = [
-    "autopay_enabled"
-]
 
 
 class DatasetPreprocessor:
@@ -46,23 +24,11 @@ class DatasetPreprocessor:
         "payment_method"
     ]
 
-    def fill_missing_values(self, df):
+    def drop_rows_without_target(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.dropna(subset=["churn"])
 
         if df.empty:
             raise DatasetError("Dataset is empty")
-
-        for column in MEAN_COLUMNS:
-            df[column] = df[column].fillna(df[column].mean())
-
-        for column in MEAN_COLUMNS_INT:
-            df[column] = df[column].fillna(int(df[column].mean()))
-
-        for column in MODE_COLUMNS:
-            df[column] = df[column].fillna(df[column].mode()[0])
-
-        for column in BINARY_COLUMNS:
-            df[column] = df[column].fillna(0)
 
         return df
 
@@ -94,11 +60,11 @@ class DatasetPreprocessor:
             "test": y_test.value_counts(normalize=True).to_dict()
         }
 
-    def preprocess(self, df):
+    def prepare_train_test_split(self, df):
         if df.empty:
             raise DatasetError("Dataset is empty")
 
-        prepared_df = self.fill_missing_values(df)
+        prepared_df = self.drop_rows_without_target(df)
         features, target = self.split_features_and_target(prepared_df)
         X_train, X_test, y_train, y_test = self.split_train_test(features, target)
 
