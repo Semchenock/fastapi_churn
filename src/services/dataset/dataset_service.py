@@ -10,6 +10,7 @@ class DatasetService:
             "data/churn_dataset.csv"
         )
         self.preprocessor = DatasetPreprocessor()
+        self._train_test = None
 
     def preview(self, limit: int = 5):
 
@@ -38,10 +39,7 @@ class DatasetService:
         }
 
     def split_info(self):
-        df = self.loader.get_dataframe()
-        self.ensure_not_empty(df)
-
-        X_train, X_test, y_train, y_test = self.preprocessor.preprocess(df)
+        X_train, X_test, y_train, y_test = self.get_train_test()
         self.ensure_not_empty(X_train)
 
         return self.preprocessor.get_split_info(y_train, y_test)
@@ -50,9 +48,13 @@ class DatasetService:
         return self.preprocessor.build_preprocessor()
 
     def get_train_test(self):
+        if self._train_test is not None:
+            return self._train_test
+
         df = self.loader.get_dataframe()
         self.ensure_not_empty(df)
-        return self.preprocessor.preprocess(df)
+        self._train_test = self.preprocessor.preprocess(df)
+        return self._train_test
 
     def get_train(self):
         X_train, _, y_train, _ = self.get_train_test()

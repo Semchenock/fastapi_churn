@@ -88,12 +88,6 @@ class DatasetPreprocessor:
 
         return X_train, X_test, y_train, y_test
 
-    def encode_categorical_features(self, df):
-        pass
-
-    def encode_numerical_features(self, df):
-        pass
-
     def get_split_info(self, y_train, y_test):
         return {
             "train": y_train.value_counts(normalize=True).to_dict(),
