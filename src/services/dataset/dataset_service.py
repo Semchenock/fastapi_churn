@@ -1,5 +1,6 @@
 from .loader import DatasetLoader
 from .preprocessor import DatasetPreprocessor
+from .exceptions import DatasetError
 
 
 class DatasetService:
@@ -13,12 +14,14 @@ class DatasetService:
     def preview(self, limit: int = 5):
 
         df = self.loader.get_dataframe()
+        self.ensure_not_empty(df)
 
         return df.head(limit).to_dict(orient="records")
 
     def info(self):
 
         df = self.loader.get_dataframe()
+        self.ensure_not_empty(df)
 
         return {
             "rows": len(df),
@@ -36,8 +39,10 @@ class DatasetService:
 
     def split_info(self):
         df = self.loader.get_dataframe()
+        self.ensure_not_empty(df)
 
         X_train, X_test, y_train, y_test = self.preprocessor.preprocess(df)
+        self.ensure_not_empty(X_train)
 
         return self.preprocessor.get_split_info(y_train, y_test)
 
@@ -46,17 +51,20 @@ class DatasetService:
 
     def get_train_test(self):
         df = self.loader.get_dataframe()
-        features, target = self.preprocessor.split_features_and_target(df)
-        X_train, X_test, y_train, y_test = self.preprocessor.split_train_test(features, target)
-        return X_train, X_test, y_train, y_test
+        self.ensure_not_empty(df)
+        return self.preprocessor.preprocess(df)
 
     def get_train(self):
-        X_train, _, y_train = self.get_train_test()
+        X_train, _, y_train, _ = self.get_train_test()
         return X_train, y_train
 
     def get_test(self):
         _, X_test, _, y_test = self.get_train_test()
         return X_test, y_test
+
+    def ensure_not_empty(self, df):
+        if df.empty:
+            raise DatasetError("Dataset is empty")
 
 
 dataset_service = DatasetService()

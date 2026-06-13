@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 
 from src.schemas.dataset_row_churn import DatasetRowChurn
+from src.services.dataset.exceptions import DatasetError
 
 MEAN_COLUMNS = [
     "monthly_fee",
@@ -47,6 +48,9 @@ class DatasetPreprocessor:
 
     def fill_missing_values(self, df):
         df = df.dropna(subset=["churn"])
+
+        if df.empty:
+            raise DatasetError("Dataset is empty")
 
         for column in MEAN_COLUMNS:
             df[column] = df[column].fillna(df[column].mean())
@@ -97,6 +101,9 @@ class DatasetPreprocessor:
         }
 
     def preprocess(self, df):
+        if df.empty:
+            raise DatasetError("Dataset is empty")
+
         prepared_df = self.fill_missing_values(df)
         features, target = self.split_features_and_target(prepared_df)
         X_train, X_test, y_train, y_test = self.split_train_test(features, target)
