@@ -22,3 +22,7 @@ async def preview_dataset(
 @app.get("/info")
 async def dataset_info():
     return dataset_service.info()
+
+@app.get("/dataset/split-info")
+async def dataset_split_info():
+    return dataset_service.split_info()
