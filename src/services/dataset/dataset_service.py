@@ -1,4 +1,5 @@
 from .loader import DatasetLoader
+from .preprocessor import DatasetPreprocessor
 
 
 class DatasetService:
@@ -7,6 +8,7 @@ class DatasetService:
         self.loader = DatasetLoader(
             "data/churn_dataset.csv"
         )
+        self.preprocessor = DatasetPreprocessor()
 
     def preview(self, limit: int = 5):
 
@@ -31,6 +33,13 @@ class DatasetService:
                 .to_dict()
             )
         }
+
+    def split_info(self):
+        df = self.loader.get_dataframe()
+
+        X_train, X_test, y_train, y_test = self.preprocessor.preprocess(df)
+
+        return self.preprocessor.get_split_info(y_train, y_test)
 
 
 dataset_service = DatasetService()
