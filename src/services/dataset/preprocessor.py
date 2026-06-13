@@ -1,5 +1,9 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
 
 from src.schemas.dataset_row_churn import DatasetRowChurn
 
@@ -24,23 +28,23 @@ BINARY_COLUMNS = [
     "autopay_enabled"
 ]
 
-NUMERIC_COLUMNS = [
-    "monthly_fee",
-    "usage_hours",
-    "support_requests",
-    "account_age_months",
-    "failed_payments",
-    "autopay_enabled"
-]
-
-CATEGORICAL_COLUMNS = [
-    "region",
-    "device_type",
-    "payment_method"
-]
-
 
 class DatasetPreprocessor:
+    NUMERIC_COLUMNS = [
+        "monthly_fee",
+        "usage_hours",
+        "support_requests",
+        "account_age_months",
+        "failed_payments",
+        "autopay_enabled"
+    ]
+
+    CATEGORICAL_COLUMNS = [
+        "region",
+        "device_type",
+        "payment_method"
+    ]
+
     def fill_missing_values(self, df):
         df = df.dropna(subset=["churn"])
 
@@ -65,8 +69,8 @@ class DatasetPreprocessor:
 
     def get_feature_types(self):
         return {
-            "numeric": NUMERIC_COLUMNS,
-            "categorical": CATEGORICAL_COLUMNS,
+            "numeric": self.NUMERIC_COLUMNS,
+            "categorical": self.CATEGORICAL_COLUMNS,
         }
 
     def split_train_test(self, features, target):
@@ -80,6 +84,12 @@ class DatasetPreprocessor:
 
         return X_train, X_test, y_train, y_test
 
+    def encode_categorical_features(self, df):
+        pass
+
+    def encode_numerical_features(self, df):
+        pass
+
     def get_split_info(self, y_train, y_test):
         return {
             "train": y_train.value_counts(normalize=True).to_dict(),
@@ -92,3 +102,21 @@ class DatasetPreprocessor:
         X_train, X_test, y_train, y_test = self.split_train_test(features, target)
 
         return X_train, X_test, y_train, y_test
+
+    def build_preprocessor(self):
+        numeric_transformer = Pipeline([
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler())
+        ])
+
+        categorical_transformer = Pipeline([
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore"))
+        ])
+
+        preprocessor = ColumnTransformer([
+            ("num", numeric_transformer, self.NUMERIC_COLUMNS),
+            ("cat", categorical_transformer, self.CATEGORICAL_COLUMNS)
+        ])
+
+        return preprocessor

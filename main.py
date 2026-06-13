@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Query
 from src.schemas.feature_vector_churn import FeatureVectorChurn
 from src.services.dataset.dataset_service import dataset_service
+from src.model.logistic_regression import train_and_measure_model
 
 app = FastAPI()
 
@@ -26,3 +27,8 @@ async def dataset_info():
 @app.get("/dataset/split-info")
 async def dataset_split_info():
     return dataset_service.split_info()
+
+@app.post("/model/train")
+async def train_model():
+    _, accuracy, f1  = train_and_measure_model()
+    return {"accuracy": accuracy, "f1": f1}
