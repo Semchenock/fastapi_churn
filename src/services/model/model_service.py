@@ -5,6 +5,7 @@ from src.model.logistic_regression import (
     load_churn_model_metadata,
 )
 from src.schemas.feature_vector_churn import FeatureVectorChurn
+from src.schemas.prediction_response_churn import PredictionResponseChurn
 from src.services.model.exceptions import ModelError
 from src.services.model.training_service import training_service
 
@@ -48,14 +49,21 @@ class ModelService:
             "metrics": self.metrics,
         }
 
-    def predict(self, payload: FeatureVectorChurn) -> dict[str, int]:
+    def predict(self, payload: list[FeatureVectorChurn]) -> list[PredictionResponseChurn]:
         if self.model is None:
             raise ModelError("Model is not trained")
 
-        features = pd.DataFrame([payload.model_dump()])
-        prediction = self.model.predict(features)[0]
+        features = pd.DataFrame([p.model_dump() for p in payload])
+        predictions = self.model.predict(features)
+        probabilities = self.model.predict_proba(features)
 
-        return {"churn": int(prediction)}
+        return [
+            {
+                "churn": int(pred),
+                "probability": float(prob[pred])
+            }
+            for pred, prob in zip(predictions, probabilities)
+        ]
 
 
 model_service = ModelService()
