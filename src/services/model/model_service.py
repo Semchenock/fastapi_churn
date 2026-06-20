@@ -41,6 +41,64 @@ class ModelService:
         self.model_type = metadata.get("model_type")
         self.config = metadata.get("config")
 
+    def _validate_features(self, vectors: list[FeatureVectorChurn]):
+        features_schema = self.schema()
+        expected_names = {field["name"] for field in features_schema}
+        type_checks = {
+            "integer": int,
+            "float": (int, float),
+            "string": str,
+            "boolean": bool,
+        }
+
+        for index, vector in enumerate(vectors):
+            values = vector.model_dump()
+
+            # неверное количество признаков
+            actual_names = set(values.keys())
+            if actual_names != expected_names:
+                missing = sorted(expected_names - actual_names)
+                extra = sorted(actual_names - expected_names)
+                raise ModelError(
+                    f"Vector #{index}: invalid feature set",
+                    code="invalid_feature_count",
+                    details={"index": index, "missing": missing, "extra": extra},
+                )
+
+            # неверные типы значений
+            for field in features_schema:
+                name = field["name"]
+                expected_type = type_checks.get(field["type"])
+                value = values[name]
+
+                if expected_type is None:
+                    continue
+
+                # bool является подклассом int — исключаем его для числовых полей
+                if field["type"] in ("integer", "float") and isinstance(value, bool):
+                    raise ModelError(
+                        f"Vector #{index}: field '{name}' has invalid type",
+                        code="invalid_feature_type",
+                        details={
+                            "index": index,
+                            "field": name,
+                            "expected": field["type"],
+                            "got": "bool",
+                        },
+                    )
+
+                if not isinstance(value, expected_type):
+                    raise ModelError(
+                        f"Vector #{index}: field '{name}' has invalid type",
+                        code="invalid_feature_type",
+                        details={
+                            "index": index,
+                            "field": name,
+                            "expected": field["type"],
+                            "got": type(value).__name__,
+                        },
+                    )
+
     def train(self, config: TrainingConfigChurn) -> dict[str, float]:
         self.model, metadata = training_service.train(config)
         self._apply_metadata(metadata)
@@ -73,9 +131,26 @@ class ModelService:
         if self.model is None:
             raise ModelError("Model is not trained")
 
-        features = pd.DataFrame([p.model_dump() for p in payload])
-        predictions = self.model.predict(features)
-        probabilities = self.model.predict_proba(features)
+        self._validate_features(payload)
+
+        try:
+            features = pd.DataFrame([p.model_dump() for p in payload])
+        except Exception as exc:
+            raise ModelError(
+                "Failed to prepare features for prediction",
+                code="data_preparation_error",
+                details={"reason": str(exc)},
+            ) from exc
+
+        try:
+            predictions = self.model.predict(features)
+            probabilities = self.model.predict_proba(features)
+        except Exception as exc:
+            raise ModelError(
+                "Model failed to produce a prediction",
+                code="prediction_error",
+                details={"reason": str(exc)},
+            ) from exc
 
         return [
             PredictionResponseChurn(churn=int(pred), probability=float(prob[pred]))

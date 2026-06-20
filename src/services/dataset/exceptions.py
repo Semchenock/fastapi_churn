@@ -1,4 +1,5 @@
-class DatasetError(Exception):
-    def __init__(self, message: str):
-        self.message = message
-        super().__init__(message)
+from src.services.exceptions import AppError
+
+
+class DatasetError(AppError):
+    code = "dataset_error"
