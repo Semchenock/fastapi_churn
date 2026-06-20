@@ -15,9 +15,9 @@ class ModelService:
     def __init__(self):
         self.metrics: dict[str, float] | None = None
         self.trained_at: str | None = None
-        self.model = self._load_model()
         self.model_type: str | None = None
         self.config: dict | None = None
+        self.model = self._load_model()
 
     def _load_model(self):
         try:
@@ -25,10 +25,7 @@ class ModelService:
             self._load_metadata()
             return model
         except FileNotFoundError:
-            # TODO remove auto training
-            model, metadata = training_service.train()
-            self._apply_metadata(metadata)
-            return model
+            return None
 
     def _load_metadata(self) -> None:
         try:

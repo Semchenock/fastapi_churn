@@ -56,8 +56,14 @@ class DatasetPreprocessor:
 
     def get_split_info(self, y_train, y_test):
         return {
-            "train": y_train.value_counts(normalize=True).to_dict(),
-            "test": y_test.value_counts(normalize=True).to_dict()
+            "train": {
+                **y_train.value_counts(normalize=True).to_dict(),
+                "total": len(y_train),
+            },
+            "test": {
+                **y_test.value_counts(normalize=True).to_dict(),
+                "total": len(y_test),
+            }
         }
 
     def prepare_train_test_split(self, df):
