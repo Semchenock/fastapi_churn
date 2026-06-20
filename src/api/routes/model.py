@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from src.schemas.feature_vector_churn import FeatureVectorChurn
 from src.schemas.prediction_response_churn import PredictionResponseChurn
+from src.schemas.training_config_churn import TrainingConfigChurn
 from src.services.model.model_service import model_service
 
 router = APIRouter()
@@ -17,8 +18,8 @@ def predict(payload: FeatureVectorChurn | list[FeatureVectorChurn]):
 
 
 @router.post("/model/train")
-async def train_model():
-    return model_service.train()
+async def train_model(payload: TrainingConfigChurn):
+    return model_service.train(payload)
 
 
 @router.get("/model/status")

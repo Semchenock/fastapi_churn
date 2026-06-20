@@ -1,3 +1,4 @@
+from src.schemas.training_config_churn import TrainingConfigChurn
 from src.model.logistic_regression import (
     build_pipeline,
     evaluate_model,
@@ -9,14 +10,15 @@ from src.services.dataset.dataset_service import dataset_service
 
 
 class TrainingService:
-    def train(self):
+    def train(self, config: TrainingConfigChurn):
         X_train, X_test, y_train, y_test = dataset_service.get_train_test()
         preprocessor = dataset_service.get_processor()
-        pipeline = build_pipeline(preprocessor)
+
+        pipeline = build_pipeline(preprocessor, config)
         trained_model = train_churn_model(pipeline, X_train, y_train)
         metrics = evaluate_model(trained_model, X_test, y_test)
         save_churn_model(trained_model)
-        metadata = save_churn_model_metadata(metrics)
+        metadata = save_churn_model_metadata(metrics, config)
 
         return trained_model, metadata
 
