@@ -25,10 +25,7 @@ class ModelService:
             self._load_metadata()
             return model
         except FileNotFoundError:
-            # TODO remove auto training
-            model, metadata = training_service.train()
-            self._apply_metadata(metadata)
-            return model
+            return None
 
     def _load_metadata(self) -> None:
         try:
