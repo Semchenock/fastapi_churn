@@ -154,3 +154,7 @@ async def model_status():
 @router.get("/model/schema")
 async def model_schema():
     return model_service.schema()
+
+@router.get("/model/metrics")
+async def model_metrics(model_type: str | None = None, limit: int | None = None):
+    return model_service.get_metrics(model_type=model_type, limit=limit)

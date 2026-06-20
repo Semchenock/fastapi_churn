@@ -2,6 +2,7 @@ import pandas as pd
 
 from src.model.logistic_regression import (
     load_churn_model,
+    load_churn_model_history,
     load_churn_model_metadata,
 )
 from src.schemas.feature_vector_churn import FeatureVectorChurn
@@ -156,6 +157,23 @@ class ModelService:
             PredictionResponseChurn(churn=int(pred), probability=float(prob[pred]))
             for pred, prob in zip(predictions, probabilities)
         ]
+
+    def get_metrics(self, model_type: str | None = None, limit: int | None = None) -> dict:
+        history = load_churn_model_history()
+
+        if model_type is not None:
+            history = [record for record in history if record.get("model_type") == model_type]
+
+        latest = history[-1] if history else None
+
+        recent = list(reversed(history))
+        if limit is not None:
+            recent = recent[:limit]
+
+        return {
+            "latest": latest,
+            "history": recent,
+        }
 
 
 model_service = ModelService()

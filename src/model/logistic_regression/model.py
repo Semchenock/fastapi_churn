@@ -103,3 +103,11 @@ def load_churn_model_metadata(path: Path = METADATA_PATH) -> dict:
 
     with path.open(encoding="utf-8") as file:
         return json.load(file)
+
+
+def load_churn_model_history(path: Path = METADATA_HISTORY_PATH) -> list[dict]:
+    if not path.exists():
+        return []
+
+    with path.open(encoding="utf-8") as file:
+        return json.load(file)
