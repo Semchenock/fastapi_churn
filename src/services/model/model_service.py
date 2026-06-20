@@ -15,9 +15,9 @@ class ModelService:
     def __init__(self):
         self.metrics: dict[str, float] | None = None
         self.trained_at: str | None = None
-        self.model = self._load_model()
         self.model_type: str | None = None
         self.config: dict | None = None
+        self.model = self._load_model()
 
     def _load_model(self):
         try:
