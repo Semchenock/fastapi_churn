@@ -25,3 +25,7 @@ async def train_model(payload: TrainingConfigChurn):
 @router.get("/model/status")
 async def model_status():
     return model_service.status()
+
+@router.get("/model/schema")
+async def model_schema():
+    return model_service.schema()

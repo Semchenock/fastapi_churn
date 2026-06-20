@@ -5,6 +5,7 @@ from src.model.logistic_regression import (
     load_churn_model_metadata,
 )
 from src.schemas.feature_vector_churn import FeatureVectorChurn
+
 from src.schemas.prediction_response_churn import PredictionResponseChurn
 from src.schemas.training_config_churn import TrainingConfigChurn
 from src.services.model.exceptions import ModelError
@@ -44,6 +45,20 @@ class ModelService:
         self.model, metadata = training_service.train(config)
         self._apply_metadata(metadata)
         return self.metrics
+
+    def schema(self) -> list[dict]:
+        type_names = {int: "integer", float: "float", str: "string", bool: "boolean"}
+
+        features = [
+            {
+                "name": name,
+                "type": type_names.get(field.annotation, str(field.annotation)),
+                "required": field.is_required(),
+            }
+            for name, field in FeatureVectorChurn.model_fields.items()
+        ]
+
+        return features
 
     def status(self) -> dict:
         return {
