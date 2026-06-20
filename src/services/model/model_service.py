@@ -54,7 +54,7 @@ class ModelService:
             "trained_at": self.trained_at,
             "metrics": self.metrics,
             "model_type": self.model_type,
-            "config": self.config,
+            "config": self.config.get("hyperparameters") if self.config is not None else None,
         }
 
     def predict(self, payload: list[FeatureVectorChurn]) -> list[PredictionResponseChurn]:

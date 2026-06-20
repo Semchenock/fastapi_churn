@@ -16,10 +16,10 @@ type ClassifierType = (LogisticRegression | RandomForestClassifier)
 
 def get_classifier(config: TrainingConfigChurn) -> ClassifierType:
     if config.model_type == ModelTypeEnum.LOGISTIC_REGRESSION:
-        return LogisticRegression(**config.model_config)
+        return LogisticRegression(**config.hyperparameters.model_dump())
 
     elif config.model_type == ModelTypeEnum.RANDOM_FOREST:
-        return RandomForestClassifier(**config.model_config)
+        return RandomForestClassifier(**config.hyperparameters.model_dump())
 
     raise ModelError(f"Invalid model type: {config.model_type}")
 
@@ -77,7 +77,7 @@ def save_churn_model_metadata(
         "trained_at": datetime.now(timezone.utc).isoformat(),
         "model_type": config.model_type,
         "metrics": metrics,
-        "config": config.model_config,
+        "config": config.model_dump(mode="json"),
     }
 
     with path.open("w", encoding="utf-8") as file:
