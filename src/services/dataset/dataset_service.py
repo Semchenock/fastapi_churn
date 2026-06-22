@@ -13,29 +13,20 @@ class DatasetService:
         self._train_test = None
 
     def preview(self, limit: int = 5):
-
         df = self.loader.get_dataframe()
         self.ensure_not_empty(df)
 
         return df.head(limit).to_dict(orient="records")
 
     def info(self):
-
         df = self.loader.get_dataframe()
         self.ensure_not_empty(df)
 
         return {
             "rows": len(df),
-
             "columns": len(df.columns),
-
             "features": list(df.columns),
-
-            "churn_distribution": (
-                df["churn"]
-                .value_counts()
-                .to_dict()
-            )
+            "churn_distribution": df["churn"].value_counts().to_dict(),
         }
 
     def split_info(self):
@@ -55,14 +46,6 @@ class DatasetService:
         self.ensure_not_empty(df)
         self._train_test = self.preprocessor.prepare_train_test_split(df)
         return self._train_test
-
-    def get_train(self):
-        X_train, _, y_train, _ = self.get_train_test()
-        return X_train, y_train
-
-    def get_test(self):
-        _, X_test, _, y_test = self.get_train_test()
-        return X_test, y_test
 
     def ensure_not_empty(self, df):
         if df.empty:
