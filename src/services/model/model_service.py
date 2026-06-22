@@ -60,7 +60,6 @@ class ModelService:
         for index, vector in enumerate(vectors):
             values = vector.model_dump()
 
-            # неверное количество признаков
             actual_names = set(values.keys())
             if actual_names != expected_names:
                 missing = sorted(expected_names - actual_names)
@@ -71,7 +70,6 @@ class ModelService:
                     details={"index": index, "missing": missing, "extra": extra},
                 )
 
-            # неверные типы значений
             for field in features_schema:
                 name = field["name"]
                 expected_type = type_checks.get(field["type"])
@@ -161,11 +159,19 @@ class ModelService:
                 details={"reason": str(exc)},
             ) from exc
 
+        classes = self.model.classes_
+
         logger.info("Predict succeeded for %d vector(s)", len(payload))
-        return [
-            PredictionResponseChurn(churn=int(pred), probability=float(prob[pred]))
-            for pred, prob in zip(predictions, probabilities)
-        ]
+        results = []
+        for pred, prob in zip(predictions, probabilities):
+            per_class = {str(int(cls)): float(p) for cls, p in zip(classes, prob)}
+            results.append(
+                PredictionResponseChurn(
+                    churn=int(pred),
+                    probabilities=per_class,
+                )
+            )
+        return results
 
     def get_metrics(self, model_type: str | None = None, limit: int | None = None) -> dict:
         history = load_churn_model_history()

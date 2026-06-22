@@ -56,13 +56,13 @@ class TestDatasetRowChurn:
 
 class TestPredictionResponseChurn:
     def test_valid(self):
-        response = PredictionResponseChurn(churn=1, probability=0.9)
+        response = PredictionResponseChurn(churn=1, probabilities={"0": 0.1, "1": 0.9})
         assert response.churn == 1
-        assert response.probability == 0.9
+        assert response.probabilities == {"0": 0.1, "1": 0.9}
 
-    def test_negative_probability_rejected(self):
+    def test_negative_churn_rejected(self):
         with pytest.raises(ValidationError):
-            PredictionResponseChurn(churn=0, probability=-0.1)
+            PredictionResponseChurn(churn=-1, probabilities={"0": 0.5, "1": 0.5})
 
 
 class TestTrainingConfig:

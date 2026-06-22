@@ -28,6 +28,8 @@ class FeatureVectorChurn(BaseModel):
     autopay_enabled: int = Field(..., ge=0, le=1)
 
     model_config = ConfigDict(
+        strict=True,
+        extra="forbid",
         json_schema_extra={
             "example": FEATURE_VECTOR_CHURN_EXAMPLE
         }
