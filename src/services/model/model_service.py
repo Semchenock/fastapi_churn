@@ -1,5 +1,6 @@
 import pandas as pd
 
+from src.core.logging_config import get_logger
 from src.model.logistic_regression import (
     load_churn_model,
     load_churn_model_history,
@@ -11,6 +12,8 @@ from src.schemas.prediction_response_churn import PredictionResponseChurn
 from src.schemas.training_config_churn import TrainingConfigChurn
 from src.services.model.exceptions import ModelError
 from src.services.model.training_service import training_service
+
+logger = get_logger(__name__)
 
 
 class ModelService:
@@ -25,8 +28,10 @@ class ModelService:
         try:
             model = load_churn_model()
             self._load_metadata()
+            logger.info("Churn model loaded from disk")
             return model
         except FileNotFoundError:
+            logger.warning("Churn model artifact not found, service starts untrained")
             return None
 
     def _load_metadata(self) -> None:
@@ -129,7 +134,10 @@ class ModelService:
         }
 
     def predict(self, payload: list[FeatureVectorChurn]) -> list[PredictionResponseChurn]:
+        logger.info("Predict called for %d vector(s)", len(payload))
+
         if self.model is None:
+            logger.warning("Predict rejected: model is not trained")
             raise ModelError("Model is not trained")
 
         self._validate_features(payload)
@@ -153,6 +161,7 @@ class ModelService:
                 details={"reason": str(exc)},
             ) from exc
 
+        logger.info("Predict succeeded for %d vector(s)", len(payload))
         return [
             PredictionResponseChurn(churn=int(pred), probability=float(prob[pred]))
             for pred, prob in zip(predictions, probabilities)

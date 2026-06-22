@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Tooling
+.idea/
+.vscode/
+.git/
+.gitignore
+.pytest_cache/
+
+# Tests
+test/
+
+# Logs and temp files
+*.log
+*.tmp
+
+# Docs
+README.md
