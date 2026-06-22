@@ -67,7 +67,6 @@ def _synthetic_records(n_per_class: int = 15) -> list[dict]:
 
 @pytest.fixture
 def isolated_client(tmp_path, monkeypatch):
-    # 1. синтетический датасет вместо реального churn_dataset.csv
     df = pd.DataFrame(_synthetic_records())
     csv_path = tmp_path / "churn_dataset.csv"
     df.to_csv(csv_path, index=False)
@@ -75,7 +74,6 @@ def isolated_client(tmp_path, monkeypatch):
     monkeypatch.setattr(dataset_service, "loader", DatasetLoader(str(csv_path)))
     monkeypatch.setattr(dataset_service, "_train_test", None)
 
-    # 2. изоляция сохранения/загрузки модели в tmp_path
     model_path = tmp_path / "model.pkl"
     meta_path = tmp_path / "meta.json"
     history_path = tmp_path / "history.json"
@@ -108,7 +106,6 @@ def isolated_client(tmp_path, monkeypatch):
         lambda path=history_path: model_module.load_churn_model_history(path=path),
     )
 
-    # 3. сброс состояния синглтона модели (на старте оно "не обучено")
     monkeypatch.setattr(model_service, "model", None)
     monkeypatch.setattr(model_service, "metrics", None)
     monkeypatch.setattr(model_service, "trained_at", None)
@@ -147,7 +144,6 @@ class TestTrainStatusPredictFlow:
         assert response.json()["code"] == "model_error"
 
     def test_full_flow(self, isolated_client):
-        # 1. обучение через /model/train
         train_response = isolated_client.post(
             "/model/train", json={"model_type": "logistic_regression"}
         )
@@ -156,7 +152,6 @@ class TestTrainStatusPredictFlow:
         assert "accuracy" in metrics and "f1" in metrics
         assert 0.0 <= metrics["accuracy"] <= 1.0
 
-        # 2. статус через /model/status
         status_response = isolated_client.get("/model/status")
         assert status_response.status_code == 200
         status = status_response.json()
@@ -164,7 +159,6 @@ class TestTrainStatusPredictFlow:
         assert status["model_type"] == "logistic_regression"
         assert status["trained_at"] is not None
 
-        # 3. предсказание через /predict (один объект)
         predict_response = isolated_client.post(
             "/predict", json=FEATURE_VECTOR_CHURN_EXAMPLE
         )
@@ -172,7 +166,9 @@ class TestTrainStatusPredictFlow:
         predictions = predict_response.json()
         assert len(predictions) == 1
         assert predictions[0]["churn"] in (0, 1)
-        assert 0.0 <= predictions[0]["probability"] <= 1.0
+        probabilities = predictions[0]["probabilities"]
+        assert set(probabilities) == {"0", "1"}
+        assert all(0.0 <= p <= 1.0 for p in probabilities.values())
 
     def test_predict_batch_after_training(self, isolated_client):
         isolated_client.post("/model/train", json={"model_type": "logistic_regression"})
